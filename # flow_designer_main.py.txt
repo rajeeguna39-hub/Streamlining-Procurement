@@ -1,0 +1,63 @@
+# flow_designer_main.py
+# Simulates ServiceNow Flow Designer for Standard Laptop Orders
+
+class FlowDesigner:
+    def __init__(self):
+        self.vendors = [
+            {"id": 1, "name": "Dell Official", "price": 75000, "rating": 5, "days": 5},
+            {"id": 2, "name": "Lenovo Partner", "price": 68000, "rating": 4, "days": 7},
+            {"id": 3, "name": "HP Enterprise", "price": 72000, "rating": 4, "days": 3}
+        ]
+        self.budget_db = {"user1": 100000, "user2": 50000}
+
+    def trigger_catalog_request(self, request_data):
+        print(f"FLOW TRIGGERED: Request {request_data['number']} for {request_data['user']}")
+        return self.check_budget(request_data)
+
+    def check_budget(self, data):
+        budget = self.budget_db.get(data['user'], 0)
+        print(f"Checking budget: Available {budget}, Required {data['price']}")
+        if budget >= data['price']:
+            return self.ask_for_approval(data)
+        else:
+            return "REJECTED: Insufficient Budget"
+
+    def ask_for_approval(self, data):
+        print(f"Sending Approval to HOD: {data['manager']}")
+        # Simulate approval
+        approved = True # In real flow, wait for approval
+        if approved:
+            print("HOD APPROVED")
+            return self.create_procurement_task(data)
+        return "REJECTED by HOD"
+
+    def create_procurement_task(self, data):
+        best_vendor = self.select_best_vendor()
+        print(f"Task Created: Procure {data['item']} from {best_vendor['name']}")
+        return self.generate_po(data, best_vendor)
+
+    def select_best_vendor(self):
+        # Flow Designer Logic: Lowest price + highest rating
+        best = sorted(self.vendors, key=lambda x: (x['price'], -x['rating']))[0]
+        print(f"Best Vendor Selected: {best['name']} - Rs.{best['price']}")
+        return best
+
+    def generate_po(self, data, vendor):
+        import datetime
+        po_number = f"PO{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}"
+        print(f"PO GENERATED: {po_number} -> Sent to {vendor['name']}")
+        print(f"Email sent to {data['user']}@company.com: Your laptop order is approved")
+        return {"po_number": po_number, "vendor": vendor, "status": "Sent to Vendor"}
+
+# RUN THE FLOW
+if __name__ == "__main__":
+    flow = FlowDesigner()
+    request = {
+        "number": "RITM0010001",
+        "user": "user1",
+        "manager": "hod@company.com",
+        "item": "Dell Latitude 5430 - i7/16GB/512GB",
+        "price": 75000
+    }
+    result = flow.trigger_catalog_request(request)
+    print("\nFINAL RESULT:", result)
